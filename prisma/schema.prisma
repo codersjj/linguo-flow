@@ -14,17 +14,47 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+  id       Int        @id @default(autoincrement())
+  email    String     @unique
+  name     String?
+  password String?
+  progress Progress[]
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  authorId  Int
-  author    User    @relation(fields: [authorId], references: [id])
+enum Stage {
+  intermediate
+  advanced
+  movies
+}
+
+enum Type {
+  audio
+  video
+  mixed
+}
+
+model Lesson {
+  id          String     @id
+  title       String
+  description String
+  stage       Stage
+  type        Type
+  duration    String
+  thumbnail   String
+  mediaUrl    String
+  transcript  String     @db.Text
+  progress    Progress[]
+}
+
+model Progress {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  lessonId         String
+  isCompleted      Boolean  @default(false)
+  lastReviewedDate DateTime @default(now())
+  reviewCount      Int      @default(0)
+  user             User     @relation(fields: [userId], references: [id])
+  lesson           Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
 }
