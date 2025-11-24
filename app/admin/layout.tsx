@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await getSession()
-    if (!session || session.user.email !== 'shanewestlife@outlook.com') {
+    if (!session || session.user.email !== process.env.ADMIN_EMAIL) {
         redirect('/')
     }
     return (

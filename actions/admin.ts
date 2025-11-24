@@ -56,7 +56,7 @@ export async function updateLesson(id: string, prevState: any, formData: FormDat
     redirect('/admin')
 }
 
-export async function deleteLesson(prevState: any, id: string) {
+export async function deleteLesson(id: string, prevState: any) {
     await prisma.lesson.delete({
         where: { id },
     })
