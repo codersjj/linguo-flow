@@ -4,12 +4,16 @@ import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { LessonClientWrapper } from '@/components/LessonClientWrapper';
 
-export default async function LessonPage({ params }: { params: { id: string } }) {
+type Params = Promise<{ id: string }>
+
+export default async function LessonPage({ params }: { params: Params }) {
+  const { id } = await params;
+
   const session = await getSession();
   if (!session) redirect('/auth');
 
   const lesson = await prisma.lesson.findUnique({
-    where: { id: params.id }
+    where: { id }
   });
 
   if (!lesson) {
@@ -26,9 +30,9 @@ export default async function LessonPage({ params }: { params: { id: string } })
   });
 
   return (
-    <LessonClientWrapper 
-      lesson={lesson} 
-      initialProgress={progress} 
+    <LessonClientWrapper
+      lesson={lesson}
+      initialProgress={progress}
     />
   );
 }

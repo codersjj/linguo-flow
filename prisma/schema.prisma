@@ -14,7 +14,7 @@ datasource db {
 }
 
 model User {
-  id       Int        @id @default(autoincrement())
+  id       String     @id @default(uuid())
   email    String     @unique
   name     String?
   password String?
@@ -31,10 +31,11 @@ enum Type {
   audio
   video
   mixed
+  text
 }
 
 model Lesson {
-  id          String     @id
+  id          String     @id @default(uuid())
   title       String
   description String
   stage       Stage
@@ -43,12 +44,13 @@ model Lesson {
   thumbnail   String
   mediaUrl    String
   transcript  String     @db.Text
+  textContent String?    @db.Text
   progress    Progress[]
 }
 
 model Progress {
   id               Int      @id @default(autoincrement())
-  userId           Int
+  userId           String
   lessonId         String
   isCompleted      Boolean  @default(false)
   lastReviewedDate DateTime @default(now())

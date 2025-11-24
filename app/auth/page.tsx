@@ -1,16 +1,25 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useEffect } from 'react'
 import { register, login } from '@/actions/auth'
 import { Button } from '@/components/ui/Button'
+import { useRouter } from 'next/navigation'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [loginState, loginAction] = useActionState(login, undefined)
   const [registerState, registerAction] = useActionState(register, undefined)
+  const router = useRouter()
 
   const currentAction = isLogin ? loginAction : registerAction
   const currentState = isLogin ? loginState : registerState
+
+  useEffect(() => {
+    if (currentState?.success) {
+      router.push('/')
+      router.refresh()
+    }
+  }, [currentState?.success, router])
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
