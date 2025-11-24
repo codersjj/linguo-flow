@@ -10,25 +10,33 @@ import Link from 'next/link';
 
 export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, initialProgress: any }) => {
   const router = useRouter();
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, startTransition] = React.useTransition();
   const [showTranscript, setShowTranscript] = useState(true);
 
   // Check if reviewed today
-  const isDoneToday = initialProgress &&
-    new Date(initialProgress.lastReviewedDate).toDateString() === new Date().toDateString();
+  const isDoneToday = !!(initialProgress &&
+    new Date(initialProgress.lastReviewedDate).toDateString() === new Date().toDateString());
 
-  const handleToggleComplete = async () => {
-    setIsPending(true);
-    try {
-      if (isDoneToday) {
-        await undoLessonComplete(lesson.id);
-      } else {
-        await markLessonComplete(lesson.id);
+  const [optimisticIsDone, setOptimisticIsDone] = React.useOptimistic(
+    isDoneToday,
+    (state, newStatus: boolean) => newStatus
+  );
+
+  const handleToggleComplete = () => {
+    const newStatus = !optimisticIsDone;
+    startTransition(async () => {
+      setOptimisticIsDone(newStatus);
+      try {
+        if (optimisticIsDone) {
+          await undoLessonComplete(lesson.id);
+        } else {
+          await markLessonComplete(lesson.id);
+        }
+      } catch (error) {
+        console.error('Failed to update lesson status', error);
+        // Optimistic state will automatically revert if we don't update the source of truth
       }
-      router.refresh(); // Refresh Server Component to update UI state
-    } finally {
-      setIsPending(false);
-    }
+    });
   };
 
   return (
@@ -41,10 +49,10 @@ export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, 
         <Button
           onClick={handleToggleComplete}
           disabled={isPending}
-          variant={isDoneToday ? "outline" : "primary"}
-          className={isDoneToday ? "bg-green-50 text-green-700 border-green-200" : ""}
+          variant={optimisticIsDone ? "outline" : "primary"}
+          className={`cursor-pointer ${optimisticIsDone ? "bg-green-50 text-green-700 border-green-200" : ""}`}
         >
-          {isPending ? 'Saving...' : (isDoneToday ? 'Reviewed Today (Undo)' : 'Mark Complete')}
+          {isPending ? 'Saving...' : (optimisticIsDone ? 'Reviewed Today (Undo)' : 'Mark Complete')}
         </Button>
       </div>
 
