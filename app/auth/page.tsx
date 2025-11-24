@@ -1,25 +1,20 @@
 'use client'
 
-import { useState, useActionState, useEffect } from 'react'
+import { useState, useActionState } from 'react'
 import { register, login } from '@/actions/auth'
-import { Button } from '@/components/ui/Button'
-import { useRouter } from 'next/navigation'
+
+import { SubmitButton } from '@/components/ui/SubmitButton'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [loginState, loginAction] = useActionState(login, undefined)
   const [registerState, registerAction] = useActionState(register, undefined)
-  const router = useRouter()
+
 
   const currentAction = isLogin ? loginAction : registerAction
   const currentState = isLogin ? loginState : registerState
 
-  useEffect(() => {
-    if (currentState?.success) {
-      router.push('/')
-      router.refresh()
-    }
-  }, [currentState?.success, router])
+
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -53,9 +48,9 @@ export default function AuthPage() {
               <input name="password" type="password" required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm" />
             </div>
 
-            <Button type="submit" className="w-full justify-center">
+            <SubmitButton className='cursor-pointer'>
               {isLogin ? 'Sign In' : 'Sign Up'}
-            </Button>
+            </SubmitButton>
           </form>
 
           <div className="mt-6 text-center">

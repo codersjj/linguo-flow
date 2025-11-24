@@ -72,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
                     {user.isGuest ? 'Guest' : user.email}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <Button className="cursor-pointer" variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut size={16} className="mr-2" />
                   Exit
                 </Button>

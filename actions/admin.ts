@@ -16,7 +16,7 @@ const LessonSchema = z.object({
     textContent: z.string().optional(),
 })
 
-export async function createLesson(formData: FormData) {
+export async function createLesson(prevState: any, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
     // Handle optional textContent
     if (data.textContent === '') delete data.textContent;
@@ -36,7 +36,7 @@ export async function createLesson(formData: FormData) {
     redirect('/admin')
 }
 
-export async function updateLesson(id: string, formData: FormData) {
+export async function updateLesson(id: string, prevState: any, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
     if (data.textContent === '') delete data.textContent;
 
@@ -56,7 +56,7 @@ export async function updateLesson(id: string, formData: FormData) {
     redirect('/admin')
 }
 
-export async function deleteLesson(id: string) {
+export async function deleteLesson(prevState: any, id: string) {
     await prisma.lesson.delete({
         where: { id },
     })

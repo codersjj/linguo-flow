@@ -1,10 +1,18 @@
 'use client'
+import { useActionState } from 'react'
 import { createLesson, updateLesson } from '@/actions/admin'
 import { uploadFile } from '@/actions/upload'
 import { useState } from 'react'
+import { SubmitButton } from '@/components/ui/SubmitButton'
 
 export default function LessonForm({ lesson }: { lesson?: any }) {
     const [uploading, setUploading] = useState(false)
+
+    // 使用 useActionState 处理表单状态
+    const [state, formAction, isPending] = useActionState(
+        lesson ? updateLesson.bind(null, lesson.id) : createLesson,
+        null
+    )
 
     async function handleUpload(e: React.ChangeEvent<HTMLInputElement>, field: string) {
         const file = e.target.files?.[0]
@@ -29,7 +37,14 @@ export default function LessonForm({ lesson }: { lesson?: any }) {
     const action = lesson ? updateLesson.bind(null, lesson.id) : createLesson
 
     return (
-        <form action={action} className="space-y-8 divide-y divide-gray-200">
+        <form action={formAction} className="space-y-8 divide-y divide-gray-200">
+            {/* 显示错误信息 */}
+            {state?.error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                    {state.error}
+                </div>
+            )}
+
             <div className="space-y-8 divide-y divide-gray-200">
                 <div>
                     <h3 className="text-lg leading-6 font-medium text-gray-900">{lesson ? 'Edit Lesson' : 'New Lesson'}</h3>
@@ -115,9 +130,9 @@ export default function LessonForm({ lesson }: { lesson?: any }) {
 
             <div className="pt-5">
                 <div className="flex justify-end">
-                    <button type="submit" disabled={uploading} className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        {uploading ? 'Uploading...' : 'Save'}
-                    </button>
+                    <SubmitButton className="ml-3 cursor-pointer">
+                        {isPending ? 'Saving...' : 'Save'}
+                    </SubmitButton>
                 </div>
             </div>
         </form>

@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma'
 import { encrypt } from '@/lib/session'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
+import { redirect } from 'next/navigation'
 
 const RegisterSchema = z.object({
   name: z.string().min(1),
@@ -43,7 +44,7 @@ export async function register(prevState: { error?: string; success?: boolean } 
   const cookieStore = await cookies()
   cookieStore.set('session', session, { expires, httpOnly: true })
 
-  return { success: true }
+  redirect('/')
 }
 
 export async function login(prevState: { error?: string; success?: boolean } | undefined, formData: FormData) {
@@ -67,7 +68,7 @@ export async function login(prevState: { error?: string; success?: boolean } | u
   const cookieStore = await cookies()
   cookieStore.set('session', session, { expires, httpOnly: true })
 
-  return { success: true }
+  redirect('/')
 }
 
 export async function logout() {
