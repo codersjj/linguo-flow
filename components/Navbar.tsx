@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Search, Menu, X, User, LogOut, Command } from 'lucide-react';
+import { Search, Menu, X, User, LogOut, Command, Shield } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
     logout();
     router.push('/');
   };
+
+  // Check if user is admin
+  const isAdmin = user && !user.isGuest && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   // Add global keyboard listener for Cmd+K here to open search
   useEffect(() => {
@@ -61,6 +64,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
             </button>
 
             <div className="h-6 w-px bg-slate-200 mx-2"></div>
+
+            {/* Admin Button - Only show for admin users */}
+            {isAdmin && (
+              <>
+                <Link href="/admin">
+                  <Button variant="ghost" size="sm" className="cursor-pointer">
+                    <Shield size={16} className="mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+                <div className="h-6 w-px bg-slate-200 mx-2"></div>
+              </>
+            )}
 
             {user ? (
               <div className="flex items-center gap-4">
@@ -127,6 +143,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
             >
               Dashboard
             </Link>
+            {/* Admin Link in Mobile Menu */}
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Shield size={18} />
+                Admin
+              </Link>
+            )}
             {user && (
               <button
                 onClick={() => { handleLogout(); setIsMenuOpen(false); }}
