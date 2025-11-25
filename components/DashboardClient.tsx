@@ -148,7 +148,7 @@ export function DashboardClient() {
 
                 {/* Stats Sidebar */}
                 <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg shadow-indigo-200">
+                    <div className="bg-linear-to-br from-indigo-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg shadow-indigo-200">
                         <h3 className="font-semibold text-indigo-100 uppercase text-xs tracking-wider mb-4">Your Streak</h3>
 
                         {/* Current Streak */}
