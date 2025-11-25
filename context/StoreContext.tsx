@@ -45,12 +45,18 @@ export const StoreProvider: React.FC<{
   }, [initialUser, isLoggingOut]);
 
   // Sync progress when initialProgress changes (e.g., after login)
+  // Only sync if user is authenticated to prevent guest progress from being overwritten
   useEffect(() => {
     if (isLoggingOut) return;
-    if (initialProgress) {
+    // Only sync initialProgress if there's a real user (not guest mode)
+    // This prevents empty {} from overwriting guest's local progress
+    if (initialUser && Object.keys(initialProgress).length > 0) {
       setProgress(initialProgress);
+    } else if (!initialUser && !progress) {
+      // Initialize progress as empty object for guest on first load
+      setProgress({});
     }
-  }, [initialProgress, isLoggingOut]);
+  }, [initialProgress, initialUser, isLoggingOut]);
 
   const login = async (email: string, password: string) => {
     console.warn("Login should be handled by Server Actions");
