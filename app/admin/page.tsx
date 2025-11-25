@@ -2,11 +2,11 @@ import prisma from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import DeleteLessonButton from '@/components/DeleteLessonButton'
+import { sortLessons } from '@/lib/sortLessons'
 
 export default async function AdminDashboard() {
-    const lessons = await prisma.lesson.findMany({
-        orderBy: { title: 'asc' }
-    })
+    const lessons = await prisma.lesson.findMany()
+    const sortedLessons = sortLessons(lessons)
 
     return (
         <div className="px-4 sm:px-0">
@@ -41,7 +41,7 @@ export default async function AdminDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
-                                    {lessons.map((lesson) => (
+                                    {sortedLessons.map((lesson) => (
                                         <tr key={lesson.id}>
                                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{lesson.title}</td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{lesson.stage}</td>

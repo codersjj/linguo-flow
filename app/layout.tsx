@@ -1,16 +1,14 @@
 import { getSession } from '@/lib/session'
 import prisma from '@/lib/prisma'
 import { ClientLayout } from '@/components/ClientLayout'
+import { sortLessons } from '@/lib/sortLessons'
 import './globals.css'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   const initialUser = session?.user ? { ...session.user, isGuest: false } : null
-  const lessons = await prisma.lesson.findMany({
-    orderBy: {
-      title: 'asc'
-    }
-  })
+  const lessonsData = await prisma.lesson.findMany()
+  const lessons = sortLessons(lessonsData)
 
   let progressMap: any = {}
   if (session?.user?.id) {
