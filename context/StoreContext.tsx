@@ -17,6 +17,7 @@ interface StoreContextType {
   submitFeedback: (feedback: Feedback) => void;
   lessons: Lesson[];
   isLoading: boolean;
+  isLoggingOut: boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -32,21 +33,24 @@ export const StoreProvider: React.FC<{
 
   const [lessons] = useState<Lesson[]>(initialLessons);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [progress, setProgress] = useState<Record<string, UserProgress> | null>(null);
 
   useEffect(() => {
+    if (isLoggingOut) return;
     if (!isInitialized || initialUser !== user) {
       setUser(initialUser);
       setIsInitialized(true);
     }
-  }, [initialUser]);
+  }, [initialUser, isLoggingOut]);
 
   // Sync progress when initialProgress changes (e.g., after login)
   useEffect(() => {
+    if (isLoggingOut) return;
     if (initialProgress) {
       setProgress(initialProgress);
     }
-  }, [initialProgress]);
+  }, [initialProgress, isLoggingOut]);
 
   const login = async (email: string, password: string) => {
     console.warn("Login should be handled by Server Actions");
@@ -57,9 +61,18 @@ export const StoreProvider: React.FC<{
   };
 
   const logout = async () => {
-    await logoutAction();
-    setUser(null);
-    window.location.href = '/auth';
+    // Set logging out state to prevent navbar from showing "Sign In" button
+    setIsLoggingOut(true);
+    try {
+      // Clear session on server first
+      await logoutAction();
+      // Redirect to auth page
+      window.location.href = '/auth';
+      // Intentionally do not reset isLoggingOut to prevent UI flicker during redirect
+    } catch (error) {
+      console.error("Logout failed", error);
+      setIsLoggingOut(false);
+    }
   };
 
   const skipLogin = () => {
@@ -154,7 +167,8 @@ export const StoreProvider: React.FC<{
       undoLessonComplete,
       submitFeedback,
       lessons,
-      isLoading
+      isLoading,
+      isLoggingOut
     }}>
       {children}
     </StoreContext.Provider>

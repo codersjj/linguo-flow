@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Menu, X, User, LogOut, Command, Shield } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from './ui/Button';
 
 interface NavbarProps {
@@ -12,13 +12,13 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
-  const { user, logout } = useStore();
+  const { user, logout, isLoggingOut } = useStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
-    router.push('/');
   };
 
   // Check if user is admin
@@ -35,6 +35,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onSearchClick]);
+
+  // Show user info if user exists OR if we're in the process of logging out
+  const showUserInfo = user || isLoggingOut;
 
   return (
     <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -78,28 +81,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
               </>
             )}
 
-            {user ? (
+            {showUserInfo ? (
               <div className="flex items-center gap-4">
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-medium text-slate-900">
-                    {user.name}
+                    {user?.name || 'User'}
                   </span>
                   <span className="text-xs text-slate-500">
-                    {user.isGuest ? 'Guest' : user.email}
+                    {user?.isGuest ? 'Guest' : user?.email || ''}
                   </span>
                 </div>
-                <Button className="cursor-pointer" variant="ghost" size="sm" onClick={handleLogout}>
+                <Button
+                  className="cursor-pointer"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                >
                   <LogOut size={16} className="mr-2" />
-                  Exit
+                  {isLoggingOut ? 'Exiting...' : 'Exit'}
                 </Button>
               </div>
             ) : (
-              <Link href="/auth">
-                <Button variant="primary" size="sm" className="cursor-pointer">
-                  <User size={16} className="mr-2" />
-                  Sign In
-                </Button>
-              </Link>
+              pathname !== '/auth' && (
+                <Link href="/auth">
+                  <Button variant="primary" size="sm" className="cursor-pointer">
+                    <User size={16} className="mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
+              )
             )}
           </div>
 
@@ -122,19 +133,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-slate-100 shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {user ? (
+            {showUserInfo ? (
               <div className="px-3 py-2 border-b border-slate-100 mb-2">
-                <p className="text-sm font-medium text-slate-900">{user.name}</p>
-                <p className="text-xs text-slate-500">{user.email || 'Guest Account'}</p>
+                <p className="text-sm font-medium text-slate-900">{user?.name || 'User'}</p>
+                <p className="text-xs text-slate-500">{user?.email || 'Guest Account'}</p>
               </div>
             ) : (
-              <Link
-                href="/auth"
-                className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Sign In
-              </Link>
+              pathname !== '/auth' && (
+                <Link
+                  href="/auth"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+              )
             )}
             <Link
               href="/"
@@ -154,12 +167,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
                 Admin
               </Link>
             )}
-            {user && (
+            {showUserInfo && (
               <button
                 onClick={() => { handleLogout(); setIsMenuOpen(false); }}
                 className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                disabled={isLoggingOut}
               >
-                Log Out
+                {isLoggingOut ? 'Logging Out...' : 'Log Out'}
               </button>
             )}
           </div>

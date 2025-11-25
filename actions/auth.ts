@@ -43,6 +43,7 @@ export async function register(prevState: { error?: string; success?: boolean } 
 
   const cookieStore = await cookies()
   cookieStore.set('session', session, { expires, httpOnly: true })
+  cookieStore.delete('guest-mode')
 
   redirect('/')
 }
@@ -67,6 +68,7 @@ export async function login(prevState: { error?: string; success?: boolean } | u
 
   const cookieStore = await cookies()
   cookieStore.set('session', session, { expires, httpOnly: true })
+  cookieStore.delete('guest-mode')
 
   redirect('/')
 }
@@ -75,4 +77,10 @@ export async function logout() {
   const cookieStore = await cookies()
   cookieStore.set('session', '', { expires: new Date(0) })
   return { success: true }
+}
+
+export async function enableGuestAccess() {
+  const cookieStore = await cookies()
+  cookieStore.set('guest-mode', 'true', { httpOnly: true })
+  redirect('/')
 }
