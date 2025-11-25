@@ -1,21 +1,24 @@
 'use client'
 
 import React, { useState } from 'react';
-import { markLessonComplete, undoLessonComplete } from '@/actions/progress';
 import { Button } from './ui/Button';
 import { ArrowLeft, CheckCircle, Eye, EyeOff, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-// Import GenAI service logic here if needed, keeping it client side for selection API
+import { useStore } from '@/context/StoreContext';
 
 export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, initialProgress: any }) => {
   const router = useRouter();
+  const { markLessonComplete, undoLessonComplete, progress } = useStore();
   const [isPending, startTransition] = React.useTransition();
   const [showTranscript, setShowTranscript] = useState(true);
 
+  // Get progress from store (for guest) or use initialProgress (for auth)
+  const currentProgress = progress[lesson.id] || initialProgress;
+
   // Check if reviewed today
-  const isDoneToday = !!(initialProgress &&
-    new Date(initialProgress.lastReviewedDate).toDateString() === new Date().toDateString());
+  const isDoneToday = !!(currentProgress &&
+    new Date(currentProgress.lastReviewedDate).toDateString() === new Date().toDateString());
 
   const [optimisticIsDone, setOptimisticIsDone] = React.useOptimistic(
     isDoneToday,
@@ -32,9 +35,9 @@ export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, 
         } else {
           await markLessonComplete(lesson.id);
         }
+        router.refresh();
       } catch (error) {
         console.error('Failed to update lesson status', error);
-        // Optimistic state will automatically revert if we don't update the source of truth
       }
     });
   };

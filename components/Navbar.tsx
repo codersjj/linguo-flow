@@ -78,7 +78,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
                 </Button>
               </div>
             ) : (
-              <span className="text-sm text-slate-500">Not Logged In</span>
+              <Link href="/auth">
+                <Button variant="primary" size="sm" className="cursor-pointer">
+                  <User size={16} className="mr-2" />
+                  Sign In
+                </Button>
+              </Link>
             )}
           </div>
 
@@ -101,11 +106,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-slate-100 shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {user && (
+            {user ? (
               <div className="px-3 py-2 border-b border-slate-100 mb-2">
                 <p className="text-sm font-medium text-slate-900">{user.name}</p>
                 <p className="text-xs text-slate-500">{user.email || 'Guest Account'}</p>
               </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign In
+              </Link>
             )}
             <Link
               href="/"

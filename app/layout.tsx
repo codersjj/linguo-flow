@@ -8,11 +8,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const initialUser = session?.user ? { ...session.user, isGuest: false } : null
   const lessons = await prisma.lesson.findMany()
 
-  // Cast or transform data to match types if necessary
-  // Prisma Lesson type matches our Lesson interface mostly, except for Enums which are strings in interface but Enums in Prisma
-  // We might need to cast or map.
-  // Actually, in types/index.ts, Stage and Type are string unions. Prisma generates Enums.
-  // They should be compatible if the values match.
+  let progressMap: any = {}
+  if (session?.user?.id) {
+    const progressList = await prisma.progress.findMany({
+      where: { userId: session.user.id }
+    })
+    progressMap = progressList.reduce((acc, p) => {
+      acc[p.lessonId] = { ...p, lastReviewedDate: p.lastReviewedDate.toISOString() }
+      return acc
+    }, {} as any)
+  }
 
   return (
     <html lang="en">
@@ -20,6 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ClientLayout
           initialUser={initialUser}
           initialLessons={lessons as any}
+          initialProgress={progressMap}
         >
           {children}
         </ClientLayout>

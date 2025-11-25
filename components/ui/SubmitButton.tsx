@@ -6,23 +6,26 @@ import { useFormStatus } from 'react-dom'
 interface SubmitButtonProps {
     children: React.ReactNode
     className?: string
+    disabled?: boolean
 }
 
 export const SubmitButton: React.FC<SubmitButtonProps> = ({
     children,
-    className = ''
+    className = '',
+    disabled
 }) => {
     const { pending } = useFormStatus()
+    const isDisabled = pending || disabled
 
     const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
     const primaryStyles = "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 disabled:hover:bg-indigo-600"
     const sizeStyles = "px-4 py-2 text-base"
-    const loadingStyles = pending ? "relative" : ""
+    const loadingStyles = isDisabled ? "relative" : ""
 
     return (
         <button
             type="submit"
-            disabled={pending}
+            disabled={isDisabled}
             className={`${baseStyles} ${primaryStyles} ${sizeStyles} ${loadingStyles} ${className}`}
         >
             {pending && (

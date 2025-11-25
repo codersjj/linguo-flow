@@ -10,7 +10,6 @@ export default async function LessonPage({ params }: { params: Params }) {
   const { id } = await params;
 
   const session = await getSession();
-  if (!session) redirect('/auth');
 
   const lesson = await prisma.lesson.findUnique({
     where: { id }
@@ -20,14 +19,19 @@ export default async function LessonPage({ params }: { params: Params }) {
     return <div>Lesson not found</div>;
   }
 
-  const progress = await prisma.progress.findUnique({
-    where: {
-      userId_lessonId: {
-        userId: session.user.id,
-        lessonId: lesson.id
+  let progress = null;
+
+  // Only fetch progress for authenticated users
+  if (session?.user?.id) {
+    progress = await prisma.progress.findUnique({
+      where: {
+        userId_lessonId: {
+          userId: session.user.id,
+          lessonId: lesson.id
+        }
       }
-    }
-  });
+    });
+  }
 
   return (
     <LessonClientWrapper

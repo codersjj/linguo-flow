@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserProgress, Lesson, Feedback } from '../types';
 import { logout as logoutAction } from '@/actions/auth';
+import { markLessonComplete as markLessonCompleteAction, undoLessonComplete as undoLessonCompleteAction } from '@/actions/progress';
 
 interface StoreContextType {
   user: User | null;
@@ -24,16 +25,15 @@ export const StoreProvider: React.FC<{
   children: ReactNode;
   initialUser: User | null;
   initialLessons: Lesson[];
-}> = ({ children, initialUser, initialLessons }) => {
-  // Use a ref to track if we've set the user from initialUser
+  initialProgress: Record<string, UserProgress>;
+}> = ({ children, initialUser, initialLessons, initialProgress }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const [lessons] = useState<Lesson[]>(initialLessons);
   const [isLoading, setIsLoading] = useState(false);
-  const [progress, setProgress] = useState<Record<string, UserProgress>>({});
+  const [progress, setProgress] = useState<Record<string, UserProgress>>(initialProgress || {});
 
-  // Initialize user from initialUser on mount and when it changes
   useEffect(() => {
     if (!isInitialized || initialUser !== user) {
       setUser(initialUser);
@@ -50,11 +50,8 @@ export const StoreProvider: React.FC<{
   };
 
   const logout = async () => {
-    // Call server action to clear session cookie
     await logoutAction();
-    // Clear client-side user state
     setUser(null);
-    // Redirect to auth page
     window.location.href = '/auth';
   };
 
@@ -62,12 +59,71 @@ export const StoreProvider: React.FC<{
     // Not supported
   };
 
-  const markLessonComplete = (lessonId: string) => {
-    // Handled by LessonClientWrapper
+  const markLessonComplete = async (lessonId: string) => {
+    const today = new Date().toISOString();
+
+    // Optimistic update
+    setProgress(prev => {
+      const existing = prev[lessonId];
+      if (existing) {
+        const lastDate = new Date(existing.lastReviewedDate).toDateString();
+        const todayDate = new Date().toDateString();
+
+        if (lastDate !== todayDate) {
+          return {
+            ...prev,
+            [lessonId]: {
+              ...existing,
+              reviewCount: existing.reviewCount + 1,
+              lastReviewedDate: today
+            }
+          };
+        }
+        return prev;
+      } else {
+        return {
+          ...prev,
+          [lessonId]: {
+            id: Date.now(),
+            userId: user?.id || 'guest',
+            lessonId,
+            isCompleted: true,
+            lastReviewedDate: today,
+            reviewCount: 1
+          }
+        };
+      }
+    });
+
+    if (user) {
+      await markLessonCompleteAction(lessonId);
+    }
   };
 
-  const undoLessonComplete = (lessonId: string) => {
-    // Handled by LessonClientWrapper
+  const undoLessonComplete = async (lessonId: string) => {
+    // Optimistic update
+    setProgress(prev => {
+      const existing = prev[lessonId];
+      if (!existing) return prev;
+
+      if (existing.reviewCount > 1) {
+        return {
+          ...prev,
+          [lessonId]: {
+            ...existing,
+            reviewCount: existing.reviewCount - 1
+          }
+        };
+      } else {
+        const newProgress = { ...prev };
+        delete newProgress[lessonId];
+        return newProgress;
+      }
+    });
+
+    if (user) {
+      await undoLessonCompleteAction(lessonId);
+    }
   };
 
   const submitFeedback = (feedback: Feedback) => {

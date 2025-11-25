@@ -7,14 +7,15 @@ import { revalidatePath } from 'next/cache'
 export async function markLessonComplete(lessonId: string) {
   const session = await getSession()
   if (!session || !session.user) return { error: 'Unauthorized' }
+  if (session.user.id === 'guest') return { error: 'Guest mode' }
 
   const userId = session.user.id
   const today = new Date()
-  
+
   // Logic: Upsert progress
   // If exists, check date. If reviewed today, ignore. If not, increment review count.
   // If not exists, create.
-  
+
   const existing = await prisma.progress.findUnique({
     where: {
       userId_lessonId: { userId, lessonId }
@@ -26,13 +27,13 @@ export async function markLessonComplete(lessonId: string) {
     const todayDate = today.toDateString()
 
     if (lastDate !== todayDate) {
-       await prisma.progress.update({
-         where: { id: existing.id },
-         data: {
-           reviewCount: { increment: 1 },
-           lastReviewedDate: today
-         }
-       })
+      await prisma.progress.update({
+        where: { id: existing.id },
+        data: {
+          reviewCount: { increment: 1 },
+          lastReviewedDate: today
+        }
+      })
     }
   } else {
     await prisma.progress.create({
@@ -53,6 +54,7 @@ export async function markLessonComplete(lessonId: string) {
 export async function undoLessonComplete(lessonId: string) {
   const session = await getSession()
   if (!session || !session.user) return { error: 'Unauthorized' }
+  if (session.user.id === 'guest') return { error: 'Guest mode' }
 
   const userId = session.user.id
   const today = new Date().toDateString()
@@ -74,7 +76,7 @@ export async function undoLessonComplete(lessonId: string) {
     // Set date back to yesterday approx (for logic consistency)
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
-    
+
     await prisma.progress.update({
       where: { id: existing.id },
       data: {

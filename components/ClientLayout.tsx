@@ -33,11 +33,12 @@ interface ClientLayoutProps {
     children: React.ReactNode;
     initialUser: User | null;
     initialLessons: Lesson[];
+    initialProgress: any;
 }
 
-export function ClientLayout({ children, initialUser, initialLessons }: ClientLayoutProps) {
+export function ClientLayout({ children, initialUser, initialLessons, initialProgress }: ClientLayoutProps) {
     return (
-        <StoreProvider initialUser={initialUser} initialLessons={initialLessons}>
+        <StoreProvider initialUser={initialUser} initialLessons={initialLessons} initialProgress={initialProgress}>
             <ScrollToTop />
             <LayoutContent>
                 {children}
