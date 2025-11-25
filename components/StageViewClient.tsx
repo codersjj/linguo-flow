@@ -41,7 +41,7 @@ export const StageViewClient: React.FC<StageViewClientProps> = ({ stage }) => {
                         >
                             <div className="flex items-start gap-4">
                                 {/* Status Icon */}
-                                <div className="flex-shrink-0 mt-1">
+                                <div className="shrink-0 mt-1">
                                     {isCompleted ? (
                                         <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
                                             <CheckCircle size={22} />

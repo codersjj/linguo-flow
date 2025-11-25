@@ -121,8 +121,8 @@ export function DashboardClient() {
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${progressMap?.[lesson.id]?.isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
                                                             {progressMap?.[lesson.id]?.isCompleted ? <CheckCircle size={16} /> : <Play size={12} fill="currentColor" />}
                                                         </div>
-                                                        <div>
-                                                            <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-600">{lesson.title}</p>
+                                                        <div className='flex-1'>
+                                                            <p className="text-sm font-medium text-slate-900 line-clamp-1 group-hover:text-indigo-600">{lesson.title}</p>
                                                             <p className="text-xs text-slate-500">{lesson.duration}</p>
                                                         </div>
                                                     </div>
