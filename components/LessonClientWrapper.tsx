@@ -42,12 +42,18 @@ export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, 
     });
   };
 
+  const handleBack = () => {
+    // Use router.back() to go to the previous page in history
+    // This will return to the stage page if user came from there
+    router.back();
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="mb-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
+        <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
           <ArrowLeft size={20} /> Back
-        </Link>
+        </button>
 
         <Button
           onClick={handleToggleComplete}
