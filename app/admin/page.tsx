@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import { deleteLesson } from '@/actions/admin'
+import DeleteLessonButton from '@/components/DeleteLessonButton'
 
 export default async function AdminDashboard() {
     const lessons = await prisma.lesson.findMany({
@@ -50,9 +50,7 @@ export default async function AdminDashboard() {
                                                 <Link href={`/admin/${lesson.id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-4">
                                                     Edit
                                                 </Link>
-                                                <form action={deleteLesson.bind(null, lesson.id)} className="inline">
-                                                    <button type="submit" className="text-red-600 hover:text-red-900">Delete</button>
-                                                </form>
+                                                <DeleteLessonButton lessonId={lesson.id} lessonTitle={lesson.title} />
                                             </td>
                                         </tr>
                                     ))}

@@ -56,9 +56,23 @@ export async function updateLesson(id: string, prevState: any, formData: FormDat
     redirect('/admin')
 }
 
-export async function deleteLesson(id: string, prevState: any) {
-    await prisma.lesson.delete({
-        where: { id },
-    })
-    revalidatePath('/admin')
+export async function deleteLesson(id: string) {
+    try {
+        // 1. 先删除所有相关的进度记录
+        await prisma.progress.deleteMany({
+            where: { lessonId: id },
+        });
+
+        // 2. 再删除课程
+        await prisma.lesson.delete({
+            where: { id },
+        });
+
+        console.log("✅ Lesson deleted successfully");
+    } catch (error) {
+        console.error("❌ Error deleting lesson:", error);
+        throw error;
+    } finally {
+        revalidatePath('/admin')
+    }
 }
