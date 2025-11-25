@@ -26,6 +26,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
 
   // Add global keyboard listener for Cmd+K here to open search
   useEffect(() => {
+    // Only enable keyboard shortcut when not on auth page
+    if (pathname === '/auth') return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -34,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onSearchClick]);
+  }, [onSearchClick, pathname]);
 
   // Show user info if user exists OR if we're in the process of logging out
   const showUserInfo = user || isLoggingOut;
@@ -53,20 +56,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <button
-              onClick={onSearchClick}
-              className="group flex items-center gap-2 px-3 py-2 text-slate-500 bg-slate-50 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 transition-all rounded-md w-64"
-              title="Search lessons (Cmd+K)"
-            >
-              <Search size={16} />
-              <span className="text-sm text-slate-400 group-hover:text-indigo-500">Search...</span>
-              <div className="ml-auto flex items-center gap-0.5 text-xs text-slate-400 bg-white border border-slate-200 rounded px-1.5 py-0.5">
-                <Command size={10} />
-                <span>K</span>
-              </div>
-            </button>
+            {/* Hide search on auth page */}
+            {pathname !== '/auth' && (
+              <>
+                <button
+                  onClick={onSearchClick}
+                  className="group flex items-center gap-2 px-3 py-2 text-slate-500 bg-slate-50 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 transition-all rounded-md w-64"
+                  title="Search lessons (Cmd+K)"
+                >
+                  <Search size={16} />
+                  <span className="text-sm text-slate-400 group-hover:text-indigo-500">Search...</span>
+                  <div className="ml-auto flex items-center gap-0.5 text-xs text-slate-400 bg-white border border-slate-200 rounded px-1.5 py-0.5">
+                    <Command size={10} />
+                    <span>K</span>
+                  </div>
+                </button>
 
-            <div className="h-6 w-px bg-slate-200 mx-2"></div>
+                <div className="h-6 w-px bg-slate-200 mx-2"></div>
+              </>
+            )}
 
             {/* Admin Button - Only show for admin users */}
             {isAdmin && (
@@ -116,9 +124,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchClick }) => {
 
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden gap-4">
-            <button onClick={onSearchClick} className="p-2 text-slate-500">
-              <Search size={20} />
-            </button>
+            {/* Hide search on auth page */}
+            {pathname !== '/auth' && (
+              <button onClick={onSearchClick} className="p-2 text-slate-500">
+                <Search size={20} />
+              </button>
+            )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
