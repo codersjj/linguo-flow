@@ -7,7 +7,7 @@ import { markLessonComplete as markLessonCompleteAction, undoLessonComplete as u
 
 interface StoreContextType {
   user: User | null;
-  progress: Record<string, UserProgress>;
+  progress: Record<string, UserProgress> | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -32,7 +32,7 @@ export const StoreProvider: React.FC<{
 
   const [lessons] = useState<Lesson[]>(initialLessons);
   const [isLoading, setIsLoading] = useState(false);
-  const [progress, setProgress] = useState<Record<string, UserProgress>>(initialProgress || {});
+  const [progress, setProgress] = useState<Record<string, UserProgress> | null>(null);
 
   useEffect(() => {
     if (!isInitialized || initialUser !== user) {
@@ -40,6 +40,13 @@ export const StoreProvider: React.FC<{
       setIsInitialized(true);
     }
   }, [initialUser]);
+
+  // Sync progress when initialProgress changes (e.g., after login)
+  useEffect(() => {
+    if (initialProgress) {
+      setProgress(initialProgress);
+    }
+  }, [initialProgress]);
 
   const login = async (email: string, password: string) => {
     console.warn("Login should be handled by Server Actions");
@@ -64,7 +71,7 @@ export const StoreProvider: React.FC<{
 
     // Optimistic update
     setProgress(prev => {
-      const existing = prev[lessonId];
+      const existing = prev?.[lessonId];
       if (existing) {
         const lastDate = new Date(existing.lastReviewedDate).toDateString();
         const todayDate = new Date().toDateString();
@@ -103,15 +110,20 @@ export const StoreProvider: React.FC<{
   const undoLessonComplete = async (lessonId: string) => {
     // Optimistic update
     setProgress(prev => {
-      const existing = prev[lessonId];
+      const existing = prev?.[lessonId];
       if (!existing) return prev;
 
       if (existing.reviewCount > 1) {
+        // Set lastReviewedDate to yesterday to prevent button flashing
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
         return {
           ...prev,
           [lessonId]: {
             ...existing,
-            reviewCount: existing.reviewCount - 1
+            reviewCount: existing.reviewCount - 1,
+            lastReviewedDate: yesterday.toISOString()
           }
         };
       } else {

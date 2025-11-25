@@ -38,7 +38,7 @@ export function DashboardClient() {
 
                         {stages.map(stage => {
                             const stageLessons = lessons.filter(l => l.stage === stage);
-                            const completedCount = stageLessons.filter(l => progressMap[l.id]?.isCompleted).length;
+                            const completedCount = stageLessons.filter(l => progressMap?.[l.id]?.isCompleted).length;
                             const percent = stageLessons.length > 0 ? Math.round((completedCount / stageLessons.length) * 100) : 0;
 
                             return (
@@ -68,17 +68,17 @@ export function DashboardClient() {
                                                     className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 group border border-transparent hover:border-slate-100"
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${progressMap[lesson.id]?.isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
-                                                            {progressMap[lesson.id]?.isCompleted ? <CheckCircle size={16} /> : <Play size={12} fill="currentColor" />}
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${progressMap?.[lesson.id]?.isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                            {progressMap?.[lesson.id]?.isCompleted ? <CheckCircle size={16} /> : <Play size={12} fill="currentColor" />}
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-600">{lesson.title}</p>
                                                             <p className="text-xs text-slate-500">{lesson.duration}</p>
                                                         </div>
                                                     </div>
-                                                    {progressMap[lesson.id] && progressMap[lesson.id].reviewCount > 1 && (
+                                                    {progressMap?.[lesson.id] && progressMap?.[lesson.id].reviewCount > 1 && (
                                                         <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
-                                                            Review x{progressMap[lesson.id].reviewCount}
+                                                            Review x{progressMap?.[lesson.id].reviewCount}
                                                         </span>
                                                     )}
                                                 </Link>
@@ -119,12 +119,12 @@ export function DashboardClient() {
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-600 text-sm">Completed</span>
-                                <span className="font-bold text-slate-900">{Object.values(progressMap).filter((p) => p.isCompleted).length}</span>
+                                <span className="font-bold text-slate-900">{Object.values(progressMap ?? {}).filter((p) => p.isCompleted).length}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-600 text-sm">Total Reviews</span>
                                 <span className="font-bold text-slate-900">
-                                    {Object.values(progressMap).reduce((acc, curr) => acc + curr.reviewCount, 0)}
+                                    {Object.values(progressMap ?? {}).reduce((acc, curr) => acc + curr.reviewCount, 0)}
                                 </span>
                             </div>
                         </div>

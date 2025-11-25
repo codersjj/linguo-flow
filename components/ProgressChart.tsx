@@ -7,13 +7,13 @@ import { STAGE_LABELS } from '../constants/lessons';
 
 interface ProgressChartProps {
   lessons: Lesson[];
-  progress: Record<string, UserProgress>;
+  progress: Record<string, UserProgress> | null;
 }
 
 export const ProgressChart: React.FC<ProgressChartProps> = ({ lessons, progress }) => {
   // Calculate stats
   const stats = lessons.reduce((acc, lesson) => {
-    const p = progress[lesson.id];
+    const p = progress?.[lesson.id];
     if (!acc[lesson.stage]) acc[lesson.stage] = { total: 0, completed: 0, reviews: 0 };
 
     acc[lesson.stage].total += 1;

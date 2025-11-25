@@ -14,7 +14,7 @@ export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, 
   const [showTranscript, setShowTranscript] = useState(true);
 
   // Get progress from store (for guest) or use initialProgress (for auth)
-  const currentProgress = progress[lesson.id] || initialProgress;
+  const currentProgress = progress?.[lesson.id] || initialProgress;
 
   // Check if reviewed today
   const isDoneToday = !!(currentProgress &&
@@ -55,7 +55,7 @@ export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, 
           variant={optimisticIsDone ? "outline" : "primary"}
           className={`cursor-pointer ${optimisticIsDone ? "bg-green-50 text-green-700 border-green-200" : ""}`}
         >
-          {isPending ? 'Saving...' : (optimisticIsDone ? 'Reviewed Today (Undo)' : 'Mark Complete')}
+          {isPending ? 'Saving...' : (optimisticIsDone ? 'Reviewed Today (Undo)' : (currentProgress?.reviewCount >= 1 ? 'Mark Review' : 'Mark Complete'))}
         </Button>
       </div>
 
