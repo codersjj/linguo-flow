@@ -47,6 +47,7 @@ export function DashboardClient() {
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-bold text-slate-900">{STAGE_LABELS[stage as keyof typeof STAGE_LABELS]}</h3>
                                             <span className="px-3 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-full">
+                                                {completedCount === stageLessons.length && stageLessons.length > 0 ? '🎉 ' : ''}
                                                 {completedCount} / {stageLessons.length} Completed
                                             </span>
                                         </div>

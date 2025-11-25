@@ -51,7 +51,7 @@ export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="mb-6 flex items-center justify-between">
-        <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
+        <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 cursor-pointer">
           <ArrowLeft size={20} /> Back
         </button>
 

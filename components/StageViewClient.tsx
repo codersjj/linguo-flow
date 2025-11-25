@@ -37,49 +37,51 @@ export const StageViewClient: React.FC<StageViewClientProps> = ({ stage }) => {
                     return (
                         <div
                             key={lesson.id}
-                            className={`relative bg-white rounded-xl border p-4 transition-all ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-indigo-300 hover:shadow-md'}`}
+                            className={`relative bg-white rounded-xl border p-5 transition-all ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-indigo-300 hover:shadow-md'}`}
                         >
-                            <div className="flex items-center gap-4 sm:gap-6">
+                            <div className="flex items-start gap-4">
                                 {/* Status Icon */}
-                                <div className="flex-shrink-0">
+                                <div className="flex-shrink-0 mt-1">
                                     {isCompleted ? (
-                                        <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                                            <CheckCircle size={20} />
+                                        <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                            <CheckCircle size={22} />
                                         </div>
                                     ) : (
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600">
-                                            {isLocked ? <Lock size={18} /> : <span className="font-bold text-sm">{index + 1}</span>}
+                                        <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600">
+                                            {isLocked ? <Lock size={20} /> : <span className="font-bold text-base">{index + 1}</span>}
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <h3 className="text-lg font-semibold text-slate-900 truncate">{lesson.title}</h3>
-                                        <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                    <div className="flex items-start justify-between gap-4 mb-2">
+                                        <h3 className="text-lg font-semibold text-slate-900">{lesson.title}</h3>
+                                        <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded whitespace-nowrap">
                                             {lesson.duration}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-slate-500 line-clamp-1">{lesson.description}</p>
-                                </div>
+                                    <p className="text-sm text-slate-500 line-clamp-2 mb-3">{lesson.description}</p>
 
-                                {/* Action */}
-                                <div className="flex-shrink-0 flex items-center gap-3">
-                                    {progress?.[lesson.id] && progress?.[lesson.id].reviewCount > 1 && (
-                                        <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
-                                            Review x{progress?.[lesson.id].reviewCount}
-                                        </span>
-                                    )}
-                                    <Link
-                                        href={`/lesson/${lesson.id}`}
-                                        className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isCompleted
+                                    {/* Action Row */}
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2">
+                                            {progress?.[lesson.id] && progress?.[lesson.id].reviewCount > 1 && (
+                                                <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded">
+                                                    Review x{progress?.[lesson.id].reviewCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <Link
+                                            href={`/lesson/${lesson.id}`}
+                                            className={`inline-flex items-center px-5 py-2 rounded-lg text-sm font-medium transition-colors ${isCompleted
                                                 ? 'text-green-700 bg-green-100 hover:bg-green-200'
                                                 : 'text-white bg-indigo-600 hover:bg-indigo-700'
-                                            }`}
-                                    >
-                                        {isCompleted ? 'Review' : 'Start'}
-                                    </Link>
+                                                }`}
+                                        >
+                                            {isCompleted ? 'Review' : 'Start'}
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>
