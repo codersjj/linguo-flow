@@ -27,7 +27,8 @@ const calculateStreak = (progressMap: Record<string, UserProgress> | null): numb
     if (dates[0] !== today && dates[0] !== yesterday) return 0;
 
     let streak = 0;
-    let currentDate = new Date();
+    // Start from the most recent activity date (could be today or yesterday)
+    let currentDate = new Date(dates[0]);
 
     for (const date of dates) {
         const checkDate = new Date(currentDate).toDateString();
