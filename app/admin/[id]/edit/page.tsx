@@ -2,9 +2,10 @@ import LessonForm from '@/components/LessonForm'
 import prisma from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 
-export default async function EditLessonPage({ params }: { params: { id: string } }) {
+export default async function EditLessonPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
     const lesson = await prisma.lesson.findUnique({
-        where: { id: params.id }
+        where: { id }
     })
 
     if (!lesson) notFound()
