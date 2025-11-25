@@ -6,10 +6,59 @@ import { CheckCircle, Play, Clock, BarChart3 } from 'lucide-react'
 import { ProgressChart } from '@/components/ProgressChart'
 import { STAGE_LABELS } from '@/constants/lessons'
 import { useStore } from '@/context/StoreContext'
+import { UserProgress } from '@/types'
+
+// Helper function to calculate current streak
+const calculateStreak = (progressMap: Record<string, UserProgress> | null): number => {
+    if (!progressMap || Object.keys(progressMap).length === 0) return 0;
+
+    // Get all unique dates from progress
+    const dates = Object.values(progressMap)
+        .map(p => new Date(p.lastReviewedDate).toDateString())
+        .filter((date, index, self) => self.indexOf(date) === index)
+        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+    if (dates.length === 0) return 0;
+
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+    // Check if the most recent activity was today or yesterday
+    if (dates[0] !== today && dates[0] !== yesterday) return 0;
+
+    let streak = 0;
+    let currentDate = new Date();
+
+    for (const date of dates) {
+        const checkDate = new Date(currentDate).toDateString();
+        if (date === checkDate) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+        } else {
+            break;
+        }
+    }
+
+    return streak;
+};
+
+// Helper function to calculate total active days
+const calculateTotalActiveDays = (progressMap: Record<string, UserProgress> | null): number => {
+    if (!progressMap || Object.keys(progressMap).length === 0) return 0;
+
+    const uniqueDates = new Set(
+        Object.values(progressMap).map(p => new Date(p.lastReviewedDate).toDateString())
+    );
+
+    return uniqueDates.size;
+};
 
 export function DashboardClient() {
     const { user, progress: progressMap, lessons } = useStore()
     const isGuest = !user
+
+    const currentStreak = calculateStreak(progressMap);
+    const totalActiveDays = calculateTotalActiveDays(progressMap);
 
     const stages = ['intermediate', 'advanced', 'movies']
 
@@ -99,13 +148,39 @@ export function DashboardClient() {
 
                 {/* Stats Sidebar */}
                 <div className="space-y-6">
-                    <div className="bg-indigo-600 rounded-xl p-6 text-white shadow-lg shadow-indigo-200">
-                        <h3 className="font-semibold text-indigo-100 uppercase text-xs tracking-wider">Daily Streak</h3>
-                        <div className="mt-2 flex items-baseline gap-2">
-                            <span className="text-4xl font-bold">1</span>
-                            <span className="text-indigo-200">day</span>
+                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg shadow-indigo-200">
+                        <h3 className="font-semibold text-indigo-100 uppercase text-xs tracking-wider mb-4">Your Streak</h3>
+
+                        {/* Current Streak */}
+                        <div className="mb-4">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-bold">{currentStreak}</span>
+                                <span className="text-indigo-200 text-lg">{currentStreak === 1 ? 'day' : 'days'}</span>
+                            </div>
+                            <p className="text-sm text-indigo-200 mt-1">Current streak</p>
                         </div>
-                        <p className="text-sm text-indigo-200 mt-2">Keep logging in to build your habit!</p>
+
+                        {/* Divider */}
+                        <div className="border-t border-indigo-400/30 my-4"></div>
+
+                        {/* Total Active Days */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-indigo-100 text-sm">Total active days</span>
+                            <span className="text-2xl font-bold">{totalActiveDays}</span>
+                        </div>
+
+                        {/* Motivational Message */}
+                        <p className="text-sm text-indigo-200 mt-4">
+                            {currentStreak === 0
+                                ? "Start your streak today! 🚀"
+                                : currentStreak === 1
+                                    ? "Great start! Keep it going! 💪"
+                                    : currentStreak < 7
+                                        ? "You're building a habit! 🔥"
+                                        : currentStreak < 30
+                                            ? "Amazing consistency! 🌟"
+                                            : "Legendary dedication! 👑"}
+                        </p>
                     </div>
 
                     <div className="bg-white rounded-xl border border-slate-200 p-6">
