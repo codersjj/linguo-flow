@@ -32,7 +32,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ lessons, progress 
   }));
 
   return (
-    <div className="h-72 w-full bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+    <div className="h-full w-full bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
       <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Learning Activity</h3>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart

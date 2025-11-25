@@ -54,11 +54,48 @@ const calculateTotalActiveDays = (progressMap: Record<string, UserProgress> | nu
     return uniqueDates.size;
 };
 
+// Helper function to calculate longest streak in history
+const calculateLongestStreak = (progressMap: Record<string, UserProgress> | null): number => {
+    if (!progressMap || Object.keys(progressMap).length === 0) return 0;
+
+    // Get all unique dates sorted from oldest to newest
+    const dates = Object.values(progressMap)
+        .map(p => new Date(p.lastReviewedDate).toDateString())
+        .filter((date, index, self) => self.indexOf(date) === index)
+        .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    if (dates.length === 0) return 0;
+
+    let longestStreak = 1;
+    let currentStreakCount = 1;
+
+    for (let i = 1; i < dates.length; i++) {
+        const prevDate = new Date(dates[i - 1]);
+        const currDate = new Date(dates[i]);
+
+        // Calculate difference in days
+        const diffTime = currDate.getTime() - prevDate.getTime();
+        const diffDays = Math.round(diffTime / 86400000);
+
+        if (diffDays === 1) {
+            // Consecutive day
+            currentStreakCount++;
+            longestStreak = Math.max(longestStreak, currentStreakCount);
+        } else {
+            // Streak broken, reset
+            currentStreakCount = 1;
+        }
+    }
+
+    return longestStreak;
+};
+
 export function DashboardClient() {
     const { user, progress: progressMap, lessons } = useStore()
     const isGuest = !user
 
     const currentStreak = calculateStreak(progressMap);
+    const longestStreak = calculateLongestStreak(progressMap);
     const totalActiveDays = calculateTotalActiveDays(progressMap);
 
     const stages = ['intermediate', 'advanced', 'movies']
@@ -77,7 +114,9 @@ export function DashboardClient() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Chart Area */}
                 <div className="lg:col-span-2 space-y-8">
-                    <ProgressChart lessons={lessons} progress={progressMap} />
+                    <div className="h-72">
+                        <ProgressChart lessons={lessons} progress={progressMap} />
+                    </div>
 
                     {/* Course Cards */}
                     <div className="space-y-6">
@@ -149,7 +188,7 @@ export function DashboardClient() {
 
                 {/* Stats Sidebar */}
                 <div className="space-y-6">
-                    <div className="bg-linear-to-br from-indigo-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg shadow-indigo-200">
+                    <div className="h-72 bg-linear-to-br from-indigo-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg shadow-indigo-200">
                         <h3 className="font-semibold text-indigo-100 uppercase text-xs tracking-wider mb-4">Your Streak</h3>
 
                         {/* Current Streak */}
@@ -163,6 +202,15 @@ export function DashboardClient() {
 
                         {/* Divider */}
                         <div className="border-t border-indigo-400/30 my-4"></div>
+
+                        {/* Longest Streak */}
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-indigo-100 text-sm">Longest streak</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-bold">{longestStreak}</span>
+                                <span className="text-indigo-200 text-xs">{longestStreak === 1 ? 'day' : 'days'}</span>
+                            </div>
+                        </div>
 
                         {/* Total Active Days */}
                         <div className="flex items-center justify-between">
