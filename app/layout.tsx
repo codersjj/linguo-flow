@@ -6,7 +6,11 @@ import './globals.css'
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   const initialUser = session?.user ? { ...session.user, isGuest: false } : null
-  const lessons = await prisma.lesson.findMany()
+  const lessons = await prisma.lesson.findMany({
+    orderBy: {
+      title: 'asc'
+    }
+  })
 
   let progressMap: any = {}
   if (session?.user?.id) {
