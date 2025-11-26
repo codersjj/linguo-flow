@@ -97,6 +97,7 @@ export function AuthForm() {
                         }
                     } else {
                         setError(loginError.message || '登录失败,请检查您的邮箱和密码')
+                        setIsLoading(false)
                     }
                 } else {
                     // 清除 guest mode cookie
@@ -114,6 +115,7 @@ export function AuthForm() {
 
                 if (registerError) {
                     setError(registerError.message || '注册失败,请重试')
+                    setIsLoading(false)
                 } else {
                     setPendingEmail(email)
                     setIsVerification(true)
@@ -128,7 +130,6 @@ export function AuthForm() {
             }
         } catch (err: any) {
             setError(err.message || '发生错误,请重试')
-        } finally {
             setIsLoading(false)
         }
     }
