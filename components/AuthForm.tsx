@@ -33,6 +33,7 @@ export function AuthForm() {
 
             if (error) {
                 setError(error.message || '验证失败,请重试')
+                setIsLoading(false)
             } else {
                 setSuccess('验证成功!正在跳转...')
                 await clearGuestMode()
@@ -40,7 +41,6 @@ export function AuthForm() {
             }
         } catch (err: any) {
             setError(err.message || '发生错误,请重试')
-        } finally {
             setIsLoading(false)
         }
     }
@@ -217,9 +217,9 @@ export function AuthForm() {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 cursor-pointer"
+                                    className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isLoading && success ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500 shadow-green-200' : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 shadow-indigo-200'} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg cursor-pointer`}
                                 >
-                                    {isLoading ? 'Verifying...' : 'Verify Email'}
+                                    {isLoading ? (success ? 'Verified! Redirecting...' : 'Verifying...') : 'Verify Email'}
                                 </button>
                             </div>
 
