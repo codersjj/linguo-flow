@@ -4,16 +4,20 @@ import Link from 'next/link'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await getSession()
-    if (!session || session.user.email !== process.env.ADMIN_EMAIL) {
+
+    // Check if user is admin
+    const isAdmin = session?.user?.email === process.env.ADMIN_EMAIL
+    if (!isAdmin) {
         redirect('/')
     }
+
     return (
         <div className="min-h-screen bg-gray-50">
             <nav className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
                         <div className="flex">
-                            <Link href="/admin" className="flex-shrink-0 flex items-center font-bold text-indigo-600">
+                            <Link href="/admin" className="shrink-0 flex items-center font-bold text-indigo-600">
                                 LinguoFlow Admin
                             </Link>
                             <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">

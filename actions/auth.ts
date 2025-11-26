@@ -1,86 +1,70 @@
 'use server'
 
-import { z } from 'zod'
-import prisma from '@/lib/prisma'
-import { encrypt } from '@/lib/session'
-import { cookies } from 'next/headers'
-import bcrypt from 'bcryptjs'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
 
-const RegisterSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
-})
-
-const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-})
-
-export async function register(prevState: { error?: string; success?: boolean } | undefined, formData: FormData) {
-  const data = Object.fromEntries(formData.entries())
-  const parsed = RegisterSchema.safeParse(data)
-
-  if (!parsed.success) {
-    return { error: 'Invalid data' }
-  }
-
-  const { name, email, password } = parsed.data
-
-  const existing = await prisma.user.findUnique({ where: { email } })
-  if (existing) {
-    return { error: 'User already exists' }
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10)
-  const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword },
-  })
-
-  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const session = await encrypt({ user: { id: user.id, email: user.email, name: user.name } })
-
+/**
+ * 清除 guest 模式 cookie
+ * 在用户登录后调用,确保不会被误认为 guest
+ */
+export async function clearGuestMode() {
   const cookieStore = await cookies()
-  cookieStore.set('session', session, { expires, httpOnly: true })
   cookieStore.delete('guest-mode')
-
-  redirect('/')
 }
 
-export async function login(prevState: { error?: string; success?: boolean } | undefined, formData: FormData) {
-  const data = Object.fromEntries(formData.entries())
-  const parsed = LoginSchema.safeParse(data)
-
-  if (!parsed.success) {
-    return { error: 'Invalid inputs' }
-  }
-
-  const { email, password } = parsed.data
-  const user = await prisma.user.findUnique({ where: { email } })
-
-  if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
-    return { error: 'Invalid credentials' }
-  }
-
-  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const session = await encrypt({ user: { id: user.id, email: user.email, name: user.name } })
-
-  const cookieStore = await cookies()
-  cookieStore.set('session', session, { expires, httpOnly: true })
-  cookieStore.delete('guest-mode')
-
-  redirect('/')
-}
-
-export async function logout() {
-  const cookieStore = await cookies()
-  cookieStore.set('session', '', { expires: new Date(0) })
-  return { success: true }
-}
-
+/**
+ * 启用访客模式
+ * Better Auth 不管理 guest 模式,所以保留自定义实现
+ */
 export async function enableGuestAccess() {
   const cookieStore = await cookies()
   cookieStore.set('guest-mode', 'true', { httpOnly: true })
   redirect('/')
+}
+
+/**
+ * 登出
+ * 清除 Better Auth session 和旧的 JWT session
+ */
+export async function logout() {
+  const cookieStore = await cookies()
+
+  // 清除 Better Auth session cookie
+  cookieStore.delete('better-auth.session_token')
+
+  // 清除旧的 JWT session (兼容性)
+  cookieStore.delete('session')
+
+  return { success: true }
+}
+
+/**
+ * 获取当前用户 session
+ * 支持 Better Auth session 和 guest 模式
+ */
+export async function getCurrentUser() {
+  const cookieStore = await cookies()
+
+  // 检查 guest 模式
+  const guestMode = cookieStore.get('guest-mode')
+  if (guestMode) {
+    return { user: null, isGuest: true }
+  }
+
+  // 获取 Better Auth session
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+
+    return {
+      user: session?.user || null,
+      isGuest: false,
+      session: session?.session || null
+    }
+  } catch (error) {
+    console.error('Failed to get session:', error)
+    return { user: null, isGuest: false }
+  }
 }

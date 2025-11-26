@@ -1,49 +1,52 @@
-import { SignJWT, jwtVerify } from 'jose'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { NextResponse } from 'next/server'
+import { cookies, headers } from 'next/headers'
+import { auth } from '@/lib/auth'
 
-const key = new TextEncoder().encode(process.env.JWT_SECRET)
-
-export async function encrypt(payload: any) {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(key)
-}
-
-export async function decrypt(input: string): Promise<any> {
-  const { payload } = await jwtVerify(input, key, {
-    algorithms: ['HS256'],
-  })
-  return payload
-}
-
+/**
+ * 获取当前 session
+ * 支持 Better Auth session 和 guest 模式
+ */
 export async function getSession() {
   const cookieStore = await cookies()
-  const session = cookieStore.get('session')?.value
-  if (!session) return null
+
+  // 检查 guest 模式
+  const guestMode = cookieStore.get('guest-mode')
+  if (guestMode) {
+    return { user: null, isGuest: true }
+  }
+
+  // 获取 Better Auth session
   try {
-    return await decrypt(session)
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+
+    if (!session) {
+      return null
+    }
+
+    return {
+      user: session.user,
+      session: session.session,
+      isGuest: false
+    }
   } catch (error) {
+    console.error('Failed to get session:', error)
     return null
   }
 }
 
-export async function updateSession(request: any) {
-  const session = request.cookies.get('session')?.value
-  if (!session) return
+/**
+ * 检查用户是否已登录
+ */
+export async function isAuthenticated() {
+  const session = await getSession()
+  return !!session?.user || !!session?.isGuest
+}
 
-  // Refresh session expiry
-  const parsed = await decrypt(session)
-  parsed.expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const res = NextResponse.next()
-  res.cookies.set({
-    name: 'session',
-    value: await encrypt(parsed),
-    httpOnly: true,
-    expires: parsed.expires,
-  })
-  return res
+/**
+ * 获取当前用户 ID
+ */
+export async function getUserId() {
+  const session = await getSession()
+  return session?.user?.id || null
 }
