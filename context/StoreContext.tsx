@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserProgress, Lesson, Feedback } from '../types';
-import { logout as logoutAction } from '@/actions/auth';
+import { signOut } from '@/lib/auth-client';
 import { markLessonComplete as markLessonCompleteAction, undoLessonComplete as undoLessonCompleteAction } from '@/actions/progress';
 
 interface StoreContextType {
@@ -70,10 +70,14 @@ export const StoreProvider: React.FC<{
     // Set logging out state to prevent navbar from showing "Sign In" button
     setIsLoggingOut(true);
     try {
-      // Clear session on server first
-      await logoutAction();
-      // Redirect to auth page
-      window.location.href = '/auth';
+      // Use better-auth client signOut to properly invalidate session
+      await signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            window.location.href = '/auth';
+          },
+        },
+      });
       // Intentionally do not reset isLoggingOut to prevent UI flicker during redirect
     } catch (error) {
       console.error("Logout failed", error);
