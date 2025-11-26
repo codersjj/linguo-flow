@@ -3,7 +3,9 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
     const session = request.cookies.get('session') // Legacy support
+    // Check both HTTP (local) and HTTPS (production) cookie names
     const betterAuthSession = request.cookies.get('better-auth.session_token')
+        || request.cookies.get('__Secure-better-auth.session_token')
     const guestMode = request.cookies.get('guest-mode')
 
     // If user is logged in (legacy or better-auth) or in guest mode, allow access
