@@ -30,8 +30,9 @@ export async function enableGuestAccess() {
 export async function logout() {
   const cookieStore = await cookies()
 
-  // 清除 Better Auth session cookie
+  // 清除 Better Auth session cookie, both HTTP (local) and HTTPS (production)
   cookieStore.delete('better-auth.session_token')
+  cookieStore.delete('__Secure-better-auth.session_token')
 
   // 清除旧的 JWT session (兼容性)
   cookieStore.delete('session')
