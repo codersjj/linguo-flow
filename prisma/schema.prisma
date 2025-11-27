@@ -14,17 +14,18 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(uuid())
-  email         String     @unique
-  emailVerified Boolean    @default(false)
-  name          String?
-  image         String?
-  password      String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  progress      Progress[]
-  sessions      Session[]
-  accounts      Account[]
+  id              String          @id @default(uuid())
+  email           String          @unique
+  emailVerified   Boolean         @default(false)
+  name            String?
+  image           String?
+  password        String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  progress        Progress[]
+  sessions        Session[]
+  accounts        Account[]
+  studyActivities StudyActivity[]
 }
 
 model Session {
@@ -81,17 +82,18 @@ enum Type {
 }
 
 model Lesson {
-  id          String     @id @default(uuid())
-  title       String
-  description String
-  stage       Stage
-  type        Type
-  duration    String
-  thumbnail   String
-  mediaUrl    String
-  transcript  String     @db.Text
-  textContent String?    @db.Text
-  progress    Progress[]
+  id              String          @id @default(uuid())
+  title           String
+  description     String
+  stage           Stage
+  type            Type
+  duration        String
+  thumbnail       String
+  mediaUrl        String
+  transcript      String          @db.Text
+  textContent     String?         @db.Text
+  progress        Progress[]
+  studyActivities StudyActivity[]
 }
 
 model Progress {
@@ -105,4 +107,16 @@ model Progress {
   lesson           Lesson   @relation(fields: [lessonId], references: [id])
 
   @@unique([userId, lessonId])
+}
+
+model StudyActivity {
+  id           String   @id @default(uuid())
+  userId       String
+  lessonId     String
+  activityType String // "COMPLETE" or "REVIEW"
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

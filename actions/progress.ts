@@ -45,6 +45,16 @@ export async function markLessonComplete(lessonId: string) {
             lastReviewedDate: today
           }
         })
+
+        // Log activity
+        await prisma.studyActivity.create({
+          data: {
+            userId,
+            lessonId,
+            activityType: 'REVIEW',
+            createdAt: today
+          }
+        })
       }
     } else {
       await prisma.progress.create({
@@ -54,6 +64,16 @@ export async function markLessonComplete(lessonId: string) {
           isCompleted: true,
           lastReviewedDate: today,
           reviewCount: 1
+        }
+      })
+
+      // Log activity
+      await prisma.studyActivity.create({
+        data: {
+          userId,
+          lessonId,
+          activityType: 'COMPLETE',
+          createdAt: today
         }
       })
     }
@@ -81,7 +101,8 @@ export async function undoLessonComplete(lessonId: string) {
     }
 
     const userId = session.user.id
-    const today = new Date().toDateString()
+    const today = new Date()
+    const todayString = today.toDateString()
 
     console.log(`[undoLessonComplete] Processing for user ${userId}, lesson ${lessonId}`)
 
@@ -94,24 +115,54 @@ export async function undoLessonComplete(lessonId: string) {
     }
 
     // Only allow undo if reviewed today
-    if (new Date(existing.lastReviewedDate).toDateString() !== today) {
+    if (new Date(existing.lastReviewedDate).toDateString() !== todayString) {
       return { success: true } // Can't undo past reviews
     }
+
+    // Delete today's studyActivity to maintain data consistency
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0))
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999))
+
+    await prisma.studyActivity.deleteMany({
+      where: {
+        userId,
+        lessonId,
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      }
+    })
 
     if (existing.reviewCount <= 1) {
       // Delete if it was the first time
       await prisma.progress.delete({ where: { id: existing.id } })
     } else {
       // Decrement if it was a review
-      // Set date back to yesterday approx (for logic consistency)
-      const yesterday = new Date()
-      yesterday.setDate(yesterday.getDate() - 1)
+      // Find the previous review date from studyActivity
+      const previousActivity = await prisma.studyActivity.findFirst({
+        where: {
+          userId,
+          lessonId,
+          createdAt: {
+            lt: startOfDay // Before today
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
+
+      // Use the previous activity date, or fall back to yesterday if not found
+      const previousDate = previousActivity
+        ? previousActivity.createdAt
+        : new Date(new Date().setDate(new Date().getDate() - 1))
 
       await prisma.progress.update({
         where: { id: existing.id },
         data: {
           reviewCount: { decrement: 1 },
-          lastReviewedDate: yesterday
+          lastReviewedDate: previousDate
         }
       })
     }

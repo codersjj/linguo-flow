@@ -8,6 +8,9 @@ import { markLessonComplete as markLessonCompleteAction, undoLessonComplete as u
 interface StoreContextType {
   user: User | null;
   progress: Record<string, UserProgress> | null;
+  streak: number;
+  longestStreak: number;
+  totalActiveDays: number;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -27,7 +30,10 @@ export const StoreProvider: React.FC<{
   initialUser: User | null;
   initialLessons: Lesson[];
   initialProgress: Record<string, UserProgress>;
-}> = ({ children, initialUser, initialLessons, initialProgress }) => {
+  initialStreak: number;
+  initialLongestStreak: number;
+  initialTotalActiveDays: number;
+}> = ({ children, initialUser, initialLessons, initialProgress, initialStreak, initialLongestStreak, initialTotalActiveDays }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -35,6 +41,9 @@ export const StoreProvider: React.FC<{
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [progress, setProgress] = useState<Record<string, UserProgress> | null>(null);
+  const [streak, setStreak] = useState(initialStreak);
+  const [longestStreak, setLongestStreak] = useState(initialLongestStreak);
+  const [totalActiveDays, setTotalActiveDays] = useState(initialTotalActiveDays);
 
   useEffect(() => {
     if (isLoggingOut) return;
@@ -52,11 +61,17 @@ export const StoreProvider: React.FC<{
     // This prevents empty {} from overwriting guest's local progress
     if (initialUser && Object.keys(initialProgress).length > 0) {
       setProgress(initialProgress);
+      setStreak(initialStreak);
+      setLongestStreak(initialLongestStreak);
+      setTotalActiveDays(initialTotalActiveDays);
     } else if (!initialUser && !progress) {
       // Initialize progress as empty object for guest on first load
       setProgress({});
+      setStreak(0);
+      setLongestStreak(0);
+      setTotalActiveDays(0);
     }
-  }, [initialProgress, initialUser, isLoggingOut]);
+  }, [initialProgress, initialUser, isLoggingOut, initialStreak, initialLongestStreak, initialTotalActiveDays]);
 
   const login = async (email: string, password: string) => {
     console.warn("Login should be handled by Server Actions");
@@ -185,6 +200,9 @@ export const StoreProvider: React.FC<{
     <StoreContext.Provider value={{
       user,
       progress,
+      streak,
+      longestStreak,
+      totalActiveDays,
       login,
       register,
       logout,

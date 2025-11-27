@@ -34,11 +34,21 @@ interface ClientLayoutProps {
     initialUser: User | null;
     initialLessons: Lesson[];
     initialProgress: any;
+    initialStreak: number;
+    initialLongestStreak: number;
+    initialTotalActiveDays: number;
 }
 
-export function ClientLayout({ children, initialUser, initialLessons, initialProgress }: ClientLayoutProps) {
+export function ClientLayout({ children, initialUser, initialLessons, initialProgress, initialStreak, initialLongestStreak, initialTotalActiveDays }: ClientLayoutProps) {
     return (
-        <StoreProvider initialUser={initialUser} initialLessons={initialLessons} initialProgress={initialProgress}>
+        <StoreProvider
+            initialUser={initialUser}
+            initialLessons={initialLessons}
+            initialProgress={initialProgress}
+            initialStreak={initialStreak}
+            initialLongestStreak={initialLongestStreak}
+            initialTotalActiveDays={initialTotalActiveDays}
+        >
             <ScrollToTop />
             <LayoutContent>
                 {children}

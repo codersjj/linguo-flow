@@ -8,97 +8,12 @@ import { STAGE_LABELS } from '@/constants/lessons'
 import { useStore } from '@/context/StoreContext'
 import { UserProgress } from '@/types'
 
-// Helper function to calculate current streak
-const calculateStreak = (progressMap: Record<string, UserProgress> | null): number => {
-    if (!progressMap || Object.keys(progressMap).length === 0) return 0;
-
-    // Get all unique dates from progress
-    const dates = Object.values(progressMap)
-        .map(p => new Date(p.lastReviewedDate).toDateString())
-        .filter((date, index, self) => self.indexOf(date) === index)
-        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
-    if (dates.length === 0) return 0;
-
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-
-    // Check if the most recent activity was today or yesterday
-    if (dates[0] !== today && dates[0] !== yesterday) return 0;
-
-    let streak = 0;
-    // Start from the most recent activity date (could be today or yesterday)
-    let currentDate = new Date(dates[0]);
-
-    for (const date of dates) {
-        const checkDate = new Date(currentDate).toDateString();
-        if (date === checkDate) {
-            streak++;
-            currentDate.setDate(currentDate.getDate() - 1);
-        } else {
-            break;
-        }
-    }
-
-    return streak;
-};
-
-// Helper function to calculate total active days
-const calculateTotalActiveDays = (progressMap: Record<string, UserProgress> | null): number => {
-    if (!progressMap || Object.keys(progressMap).length === 0) return 0;
-
-    const uniqueDates = new Set(
-        Object.values(progressMap).map(p => new Date(p.lastReviewedDate).toDateString())
-    );
-
-    return uniqueDates.size;
-};
-
-// Helper function to calculate longest streak in history
-const calculateLongestStreak = (progressMap: Record<string, UserProgress> | null): number => {
-    if (!progressMap || Object.keys(progressMap).length === 0) return 0;
-
-    // Get all unique dates sorted from oldest to newest
-    const dates = Object.values(progressMap)
-        .map(p => new Date(p.lastReviewedDate).toDateString())
-        .filter((date, index, self) => self.indexOf(date) === index)
-        .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
-    if (dates.length === 0) return 0;
-
-    let longestStreak = 1;
-    let currentStreakCount = 1;
-
-    for (let i = 1; i < dates.length; i++) {
-        const prevDate = new Date(dates[i - 1]);
-        const currDate = new Date(dates[i]);
-
-        // Calculate difference in days
-        const diffTime = currDate.getTime() - prevDate.getTime();
-        const diffDays = Math.round(diffTime / 86400000);
-
-        if (diffDays === 1) {
-            // Consecutive day
-            currentStreakCount++;
-            longestStreak = Math.max(longestStreak, currentStreakCount);
-        } else {
-            // Streak broken, reset
-            currentStreakCount = 1;
-        }
-    }
-
-    return longestStreak;
-};
-
 export function DashboardClient() {
-    const { user, progress: progressMap, lessons } = useStore()
+    const { user, progress: progressMap, lessons, streak: currentStreak, longestStreak, totalActiveDays } = useStore()
     const isGuest = !user
 
-    const currentStreak = calculateStreak(progressMap);
-    const longestStreak = calculateLongestStreak(progressMap);
-    const totalActiveDays = calculateTotalActiveDays(progressMap);
-
     const stages = ['intermediate', 'advanced', 'movies']
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
