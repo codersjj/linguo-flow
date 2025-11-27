@@ -5,87 +5,122 @@ import { getSession } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
 
 export async function markLessonComplete(lessonId: string) {
-  const session = await getSession()
-  if (!session || !session.user) return { error: 'Unauthorized' }
-  if (session.user.id === 'guest') return { error: 'Guest mode' }
+  try {
+    const session = await getSession()
 
-  const userId = session.user.id
-  const today = new Date()
-
-  // Logic: Upsert progress
-  // If exists, check date. If reviewed today, ignore. If not, increment review count.
-  // If not exists, create.
-
-  const existing = await prisma.progress.findUnique({
-    where: {
-      userId_lessonId: { userId, lessonId }
+    if (!session || !session.user) {
+      console.error('[markLessonComplete] Unauthorized: No session or user found')
+      return { error: 'Unauthorized', code: 401 }
     }
-  })
 
-  if (existing) {
-    const lastDate = new Date(existing.lastReviewedDate).toDateString()
-    const todayDate = today.toDateString()
+    if (session.user.id === 'guest') {
+      console.error('[markLessonComplete] Guest mode not supported for server action')
+      return { error: 'Guest mode', code: 403 }
+    }
 
-    if (lastDate !== todayDate) {
-      await prisma.progress.update({
-        where: { id: existing.id },
+    const userId = session.user.id
+    const today = new Date()
+
+    console.log(`[markLessonComplete] Processing for user ${userId}, lesson ${lessonId}`)
+
+    // Logic: Upsert progress
+    // If exists, check date. If reviewed today, ignore. If not, increment review count.
+    // If not exists, create.
+
+    const existing = await prisma.progress.findUnique({
+      where: {
+        userId_lessonId: { userId, lessonId }
+      }
+    })
+
+    if (existing) {
+      const lastDate = new Date(existing.lastReviewedDate).toDateString()
+      const todayDate = today.toDateString()
+
+      if (lastDate !== todayDate) {
+        await prisma.progress.update({
+          where: { id: existing.id },
+          data: {
+            reviewCount: { increment: 1 },
+            lastReviewedDate: today
+          }
+        })
+      }
+    } else {
+      await prisma.progress.create({
         data: {
-          reviewCount: { increment: 1 },
-          lastReviewedDate: today
+          userId,
+          lessonId,
+          isCompleted: true,
+          lastReviewedDate: today,
+          reviewCount: 1
         }
       })
     }
-  } else {
-    await prisma.progress.create({
-      data: {
-        userId,
-        lessonId,
-        isCompleted: true,
-        lastReviewedDate: today,
-        reviewCount: 1
-      }
-    })
-  }
 
-  revalidatePath(`/lesson/${lessonId}`)
-  revalidatePath('/')
+    revalidatePath(`/lesson/${lessonId}`)
+    revalidatePath('/')
+    return { success: true }
+  } catch (error) {
+    console.error('[markLessonComplete] Error:', error)
+    return { error: 'Internal Server Error', code: 500 }
+  }
 }
 
 export async function undoLessonComplete(lessonId: string) {
-  const session = await getSession()
-  if (!session || !session.user) return { error: 'Unauthorized' }
-  if (session.user.id === 'guest') return { error: 'Guest mode' }
+  try {
+    const session = await getSession()
+    if (!session || !session.user) {
+      console.error('[undoLessonComplete] Unauthorized: No session or user found')
+      return { error: 'Unauthorized', code: 401 }
+    }
 
-  const userId = session.user.id
-  const today = new Date().toDateString()
+    if (session.user.id === 'guest') {
+      console.error('[undoLessonComplete] Guest mode not supported for server action')
+      return { error: 'Guest mode', code: 403 }
+    }
 
-  const existing = await prisma.progress.findUnique({
-    where: { userId_lessonId: { userId, lessonId } }
-  })
+    const userId = session.user.id
+    const today = new Date().toDateString()
 
-  if (!existing) return
+    console.log(`[undoLessonComplete] Processing for user ${userId}, lesson ${lessonId}`)
 
-  // Only allow undo if reviewed today
-  if (new Date(existing.lastReviewedDate).toDateString() !== today) return
-
-  if (existing.reviewCount <= 1) {
-    // Delete if it was the first time
-    await prisma.progress.delete({ where: { id: existing.id } })
-  } else {
-    // Decrement if it was a review
-    // Set date back to yesterday approx (for logic consistency)
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-
-    await prisma.progress.update({
-      where: { id: existing.id },
-      data: {
-        reviewCount: { decrement: 1 },
-        lastReviewedDate: yesterday
-      }
+    const existing = await prisma.progress.findUnique({
+      where: { userId_lessonId: { userId, lessonId } }
     })
-  }
 
-  revalidatePath(`/lesson/${lessonId}`)
-  revalidatePath('/')
+    if (!existing) {
+      return { success: true } // Nothing to undo
+    }
+
+    // Only allow undo if reviewed today
+    if (new Date(existing.lastReviewedDate).toDateString() !== today) {
+      return { success: true } // Can't undo past reviews
+    }
+
+    if (existing.reviewCount <= 1) {
+      // Delete if it was the first time
+      await prisma.progress.delete({ where: { id: existing.id } })
+    } else {
+      // Decrement if it was a review
+      // Set date back to yesterday approx (for logic consistency)
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+
+      await prisma.progress.update({
+        where: { id: existing.id },
+        data: {
+          reviewCount: { decrement: 1 },
+          lastReviewedDate: yesterday
+        }
+      })
+    }
+
+    revalidatePath(`/lesson/${lessonId}`)
+    revalidatePath('/')
+    return { success: true }
+  } catch (error) {
+    console.error('[undoLessonComplete] Error:', error)
+    return { error: 'Internal Server Error', code: 500 }
+  }
 }

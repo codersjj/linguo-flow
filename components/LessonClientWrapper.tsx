@@ -36,8 +36,11 @@ export const LessonClientWrapper = ({ lesson, initialProgress }: { lesson: any, 
           await markLessonComplete(lesson.id);
         }
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to update lesson status', error);
+        // Revert optimistic state if possible, or just alert
+        setOptimisticIsDone(!newStatus); // Revert
+        alert(`Failed to update status: ${error.message || 'Unknown error'}`);
       }
     });
   };
